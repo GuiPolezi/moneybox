@@ -43,7 +43,7 @@ export function Select({ className = '', children, ...p }) {
 
 export function Card({ className = '', children }) {
   return (
-    <div className={`bg-paper2 border border-line rounded-sm shadow-note ${className}`}>{children}</div>
+    <div className={`border border-line rounded-sm shadow-note ${className}`}>{children}</div>
   )
 }
 
