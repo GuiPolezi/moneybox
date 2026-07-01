@@ -2,7 +2,7 @@ import { createContext, useContext, useCallback, useEffect, useState } from 'rea
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 import {
-  monthKey, firstOfThisMonth, invoiceBalance, monthlyObligations,
+  monthKey, firstOfThisMonth, invoiceBalance, monthlyObligations, addMonths,
 } from '../lib/finance'
 
 const FinanceContext = createContext(null)
@@ -167,7 +167,7 @@ export function FinanceProvider({ children }) {
     const remaining = invoiceBalance(invoice)
     if (remaining <= 0) return
     const withInterest = remaining * (1 + Number(invoice.interest_rate))
-    const nextMonth = monthKey(new Date(new Date(invoice.reference_month).setMonth(new Date(invoice.reference_month).getMonth() + 1)))
+    const nextMonth = monthKey(addMonths(invoice.reference_month, 1))
     const { data: next } = await supabase.rpc('get_or_create_invoice', { p_month: nextMonth })
     await supabase.from('invoices').update({
       carried_amount: Number(next.carried_amount) + withInterest,

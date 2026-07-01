@@ -10,16 +10,29 @@ export const BRL = (n) =>
     minimumFractionDigits: 2,
   })
 
+// Parse a value as a LOCAL date. Date-only strings ("2026-07-01") are otherwise
+// read as UTC midnight and slip to the previous day in negative-offset zones
+// (e.g. UTC−3 / São Paulo), which shows the wrong month. Full timestamps and
+// Date objects pass through unchanged.
+export const parseDate = (d) => {
+  if (d instanceof Date) return d
+  if (typeof d === 'string') {
+    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+  }
+  return new Date(d)
+}
+
 export const monthKey = (d) => {
-  const x = new Date(d)
+  const x = parseDate(d)
   return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-01`
 }
 
 export const monthLabel = (d) =>
-  new Date(d).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+  parseDate(d).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
 
 export const addMonths = (d, n) => {
-  const x = new Date(d)
+  const x = parseDate(d)
   x.setMonth(x.getMonth() + n)
   return x
 }
