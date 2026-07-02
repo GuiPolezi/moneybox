@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   ResponsiveContainer, BarChart, Bar, Cell, XAxis, YAxis, Tooltip,
   AreaChart, Area, CartesianGrid, ReferenceLine, LabelList,
@@ -14,10 +14,25 @@ const axis = { fontFamily: 'IBM Plex Mono', fontSize: 11, fill: '#1C262099' }
 const compact = (n) => 'R$' + Math.round(n / 1).toLocaleString('pt-BR')
 const CAT_COLORS = ['#234A3C', '#B0894A', '#7E3030', '#6E7558', '#2F6450', '#C9A24B']
 
+// ajusta parâmetros do gráfico conforme a largura da tela
+function useIsNarrow(bp = 640) {
+  const [narrow, setNarrow] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < bp : false
+  )
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth < bp)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [bp])
+  return narrow
+}
+
 export default function Dashboard() {
   const {
     profile, openInvoiceBalance, obligations, snapshots, movements,
   } = useFinance()
+
+  const narrow = useIsNarrow()
 
   const balance = Number(profile?.balance ?? 0)
   const salary = Number(profile?.salary ?? 0)
@@ -157,28 +172,28 @@ export default function Dashboard() {
 
           {categorySeries.length ? (
             <div className="flex-1 w-full mt-2">
-              <ResponsiveContainer width="100%" height={Math.max(200, categorySeries.length * 52)}>
-                <BarChart data={categorySeries} layout="vertical" margin={{ left: 0, right: 80, top: 0, bottom: 0 }}>
+              <ResponsiveContainer width="100%" height={Math.max(200, categorySeries.length * (narrow ? 46 : 52))}>
+                <BarChart data={categorySeries} layout="vertical" margin={{ left: 0, right: narrow ? 52 : 80, top: 0, bottom: 0 }}>
                   <XAxis type="number" hide />
                   <YAxis 
                     type="category" 
                     dataKey="category" 
-                    tick={{ fontFamily: 'IBM Plex Mono', fontSize: 12, fill: '#1C2620', fontWeight: 500 }} 
+                    tick={{ fontFamily: 'IBM Plex Mono', fontSize: narrow ? 11 : 12, fill: '#1C2620', fontWeight: 500 }} 
                     axisLine={false} 
                     tickLine={false} 
-                    width={100} 
+                    width={narrow ? 76 : 100} 
                   />
                   <Tooltip content={<CategoryTooltip />} cursor={{ fill: 'rgba(35,74,60,0.04)' }} />
-                  <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={28} animationDuration={1000}>
+                  <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={narrow ? 22 : 28} animationDuration={1000}>
                     {categorySeries.map((d, i) => (
                       <Cell key={i} fill={CAT_COLORS[i % CAT_COLORS.length]} opacity={0.9} />
                     ))}
                     <LabelList
                       dataKey="total" 
                       position="right"
-                      offset={12}
+                      offset={narrow ? 8 : 12}
                       formatter={(v) => BRL(v)}
-                      style={{ fontFamily: 'IBM Plex Mono', fontSize: 12, fill: '#1C262099', fontWeight: 500 }}
+                      style={{ fontFamily: 'IBM Plex Mono', fontSize: narrow ? 10 : 12, fill: '#1C262099', fontWeight: 500 }}
                     />
                   </Bar>
                 </BarChart>
@@ -200,7 +215,7 @@ function Stat({ label, value, tone = 'currency', hint }) {
   return (
     <Card className={`p-4 relative overflow-hidden before:absolute before:left-0 before:top-0 before:h-full before:w-1 ${ring}`}>
       <p className="text-[11px] uppercase tracking-wider text-ink/55">{label}</p>
-      <Money value={value} className="text-xl sm:text-2xl block mt-1" />
+      <Money value={value} className="text-lg sm:text-2xl block mt-1" />
       {hint && <p className="text-[11px] text-ink/45 mt-1">{hint}</p>}
     </Card>
   )

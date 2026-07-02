@@ -46,7 +46,7 @@ export default function Bills() {
                     </div>
                     <Money value={b.amount} className="text-base" />
                   </div>
-                  <div className="flex items-center gap-2 mt-3">
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
                     {paid ? (
                       <Pill tone="currency">paga este mês</Pill>
                     ) : (
@@ -89,7 +89,7 @@ export default function Bills() {
                   <div className="mt-3 h-1.5 bg-line rounded-full overflow-hidden">
                     <div className="h-full bg-currency" style={{ width: `${pct}%` }} />
                   </div>
-                  <div className="flex items-center gap-2 mt-3">
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
                     {done ? (
                       <Pill tone="currency">quitada</Pill>
                     ) : (

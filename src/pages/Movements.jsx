@@ -87,13 +87,15 @@ export default function Movements() {
           ) : (
             <ul>
               {movements.map((m) => (
-                <li key={m.id} className="flex items-center justify-between px-4 py-3 rule last:border-0">
+                <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-3 rule last:border-0">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-ink truncate">{m.description || m.category}</span>
-                      <Pill tone={m.method === 'credit' ? 'brass' : 'sage'}>
-                        {m.method === 'credit' ? 'crédito' : 'dinheiro'}
-                      </Pill>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm text-ink truncate min-w-0">{m.description || m.category}</span>
+                      <span className="shrink-0">
+                        <Pill tone={m.method === 'credit' ? 'brass' : 'sage'}>
+                          {m.method === 'credit' ? 'crédito' : 'dinheiro'}
+                        </Pill>
+                      </span>
                     </div>
                     <p className="text-[11px] text-ink/45">
                       {m.category} · {new Date(m.occurred_at).toLocaleDateString('pt-BR')}

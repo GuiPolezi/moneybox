@@ -5,9 +5,11 @@
 :root { color-scheme: light; }
 
 html, body, #root { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
+  overflow-x: hidden; /* nada de rolagem horizontal acidental no celular */
   background-color: #E9E3D2;
   /* faint engraved-paper grain */
   background-image:
@@ -17,6 +19,13 @@ body {
   font-family: 'Work Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* imagens e svg nunca estouram o container */
+img, svg { max-width: 100%; }
+
+/* rolagem horizontal suave (menu no celular) sem barra visível */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* every monetary figure rides the ledger rail: tabular mono numerals */
 .figure {

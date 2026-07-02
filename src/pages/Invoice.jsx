@@ -55,10 +55,10 @@ export default function Invoice() {
             <Pill tone="brass">{invoice?.status === 'finalized' ? 'finalizada' : invoice?.status === 'paid' ? 'quitada' : 'em aberto'}</Pill>
           </div>
 
-          <Money value={due} className="block text-4xl sm:text-5xl mt-3" />
+          <Money value={due} className="block text-3xl sm:text-5xl mt-3 break-words" />
           <p className="text-paper2/70 text-sm mt-1">valor em aberto</p>
 
-          <div className="grid grid-cols-3 gap-4 mt-6 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-6 text-sm">
             <Mini label="Gastos do ciclo" value={invoice?.total_amount} />
             <Mini label="Saldo de meses anteriores" value={invoice?.carried_amount} />
             <Mini label="Já pago" value={invoice?.paid_amount} />
