@@ -67,10 +67,62 @@ export function projectNextBalance({
   openInvoiceBalance,
   obligations,
 }) {
-  // salário só entra como base quando o saldo está zerado (o salário É o saldo
-  // de partida); havendo saldo, projeta-se a partir dele, sem somar os dois.
-  const base = Number(balance) === 0 ? Number(salary) : Number(balance)
-  return base - Number(openInvoiceBalance) - Number(obligations)
+  // o salário entra todo mês, então a projeção do próximo mês soma o salário
+  // ao saldo atual e desconta a fatura em aberto e os compromissos do mês.
+  return Number(balance) + Number(salary) - Number(openInvoiceBalance) - Number(obligations)
+}
+
+// "Dinheiro do mês": o que sobra APENAS do que você já tem hoje, depois de
+// quitar a fatura em aberto e pagar os compromissos do mês (sem contar salário).
+export function projectMoneyThisMonth({ balance, openInvoiceBalance, obligations }) {
+  return Number(balance) - Number(openInvoiceBalance) - Number(obligations)
+}
+
+// Dias até o próximo pagamento (dia do salário). Se já passou neste mês,
+// conta até o mesmo dia do mês seguinte.
+export function daysUntilPayday(day = 5) {
+  const now = new Date()
+  const today = now.getDate()
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const target = Math.min(Math.max(1, Number(day) || 5), daysInMonth)
+  if (today <= target) return target - today
+  return (daysInMonth - today) + target
+}
+
+// Compromissos ainda EM ABERTO neste mês (os que você AINDA NÃO pagou).
+// Pagar uma conta já mexeu no saldo (dinheiro) ou na fatura (crédito), então
+// ela não pode continuar pesando aqui — senão seria descontada duas vezes.
+//   • conta fixa: em aberto se está ativa e não há pagamento registrado no mês.
+//   • parcela: em aberto se ainda não quitou E a parcela deste mês não foi paga
+//     (comparando quantas já deveriam ter sido pagas até agora com paid_count).
+export function openObligationsThisMonth({ fixedBills, billPayments, installments, thisMonth }) {
+  const paidFixedIds = new Set(
+    (billPayments || [])
+      .filter((p) => p.reference_month === thisMonth)
+      .map((p) => p.fixed_bill_id)
+  )
+  const fixed = (fixedBills || [])
+    .filter((b) => b.active && !paidFixedIds.has(b.id))
+    .reduce((s, b) => s + Number(b.amount), 0)
+
+  const now = parseDate(thisMonth)
+  const inst = (installments || []).reduce((s, i) => {
+    if (i.paid_count >= i.total_count) return s // quitada
+    const start = i.start_date ? parseDate(i.start_date) : null
+    let owedThisMonth
+    if (!start || isNaN(start.getTime())) {
+      owedThisMonth = true // sem data confiável: trata como em aberto
+    } else {
+      const monthsElapsed =
+        (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
+      if (monthsElapsed < 0) return s // ainda não começou
+      const expectedByNow = Math.min(i.total_count, monthsElapsed + 1)
+      owedThisMonth = i.paid_count < expectedByNow // ainda não pagou a deste mês
+    }
+    return owedThisMonth ? s + Number(i.installment_amount) : s
+  }, 0)
+
+  return { fixed, inst, total: fixed + inst }
 }
 
 // Build a 6-month forward projection for the dashboard chart.

@@ -8,6 +8,7 @@ import { Card, Money, Pill } from '../components/ui/primitives'
 import { Guilloche } from '../components/Ornament'
 import {
   BRL, monthLabel, firstOfThisMonth, projectNextBalance,
+  projectMoneyThisMonth, daysUntilPayday, openObligationsThisMonth,
 } from '../lib/finance'
 
 const axis = { fontFamily: 'IBM Plex Mono', fontSize: 11, fill: '#1C262099' }
@@ -30,6 +31,7 @@ function useIsNarrow(bp = 640) {
 export default function Dashboard() {
   const {
     profile, openInvoiceBalance, obligations, snapshots, movements,
+    fixedBills, billPayments, installments, thisMonth,
   } = useFinance()
 
   const narrow = useIsNarrow()
@@ -55,10 +57,34 @@ export default function Dashboard() {
     })
   }, [snapshots])
 
-  // projeção do próximo mês
+  // projeção do próximo mês (inclui o salário, que entra todo mês)
   const nextBalance = projectNextBalance({
     balance, salary, openInvoiceBalance, obligations: obligations.total,
   })
+
+  // compromissos ainda EM ABERTO neste mês (exclui os já pagos, que já mexeram
+  // no saldo ou na fatura). É o que deve pesar no "Dinheiro do mês".
+  const openObl = openObligationsThisMonth({ fixedBills, billPayments, installments, thisMonth })
+
+  // dinheiro do mês: só com o que você já tem hoje, após fatura e compromissos
+  // ainda em aberto (não conta os que você já pagou).
+  const moneyThisMonth = projectMoneyThisMonth({
+    balance, openInvoiceBalance, obligations: openObl.total,
+  })
+
+  // porcentagem de compromissos já pagos neste mês (por valor)
+  const paidObligations = Math.max(0, obligations.total - openObl.total)
+  const paidPct = obligations.total > 0
+    ? Math.round((paidObligations / obligations.total) * 100)
+    : 0
+
+  // contexto de pagamento
+  const salaryDay = profile?.salary_day ?? 5
+  const daysToPay = daysUntilPayday(salaryDay)
+  const paydayCaption =
+    daysToPay === 0
+      ? `dia do salário é hoje (dia ${salaryDay})`
+      : `faltam ${daysToPay} dia${daysToPay > 1 ? 's' : ''} para o salário (dia ${salaryDay})`
 
   // gastos por categoria (mês atual)
   const categorySeries = useMemo(() => {
@@ -94,10 +120,10 @@ export default function Dashboard() {
         <Stat label="Salário (fixo)" value={salary} tone="brass" />
         <Stat label="Fatura atual" value={openInvoiceBalance} tone="oxblood" hint="cartão · em aberto" />
         <Stat
-          label="Projeção próx. mês"
-          value={nextBalance}
-          tone={nextBalance < 0 ? 'oxblood' : 'currency'}
-          hint="saldo − fatura − contas"
+          label="Compromissos do mês"
+          value={obligations.total}
+          tone="oxblood"
+          hint={`${paidPct}% pago este mês`}
         />
       </section>
 
@@ -107,7 +133,31 @@ export default function Dashboard() {
         <span className="text-sm">Contas fixas <Money value={obligations.fixed} className="ml-1" /></span>
         <span className="text-sm">Parcelas <Money value={obligations.inst} className="ml-1" /></span>
         <span className="text-sm font-medium">Total <Money value={obligations.total} className="ml-1" /></span>
+        <span className="text-sm">Em aberto <Money value={openObl.total} className="ml-1" /></span>
+        <span className="text-xs text-currency font-medium">{paidPct}% pago</span>
       </Card>
+
+      {/* projeções */}
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-display text-xl text-ink">Projeções</h2>
+          <p className="text-xs text-ink/50">{paydayCaption}</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+          <Stat
+            label="Dinheiro do mês"
+            value={moneyThisMonth}
+            tone={moneyThisMonth < 0 ? 'oxblood' : 'currency'}
+            hint="saldo − fatura − compromissos em aberto"
+          />
+          <Stat
+            label="Projeção próximo mês"
+            value={nextBalance}
+            tone={nextBalance < 0 ? 'oxblood' : 'currency'}
+            hint="saldo + salário − fatura − compromissos"
+          />
+        </div>
+      </section>
 
       {/* charts */}
       <section className="grid lg:grid-cols-2 gap-4">
