@@ -67,7 +67,10 @@ export function projectNextBalance({
   openInvoiceBalance,
   obligations,
 }) {
-  return Number(balance) + Number(salary) - Number(openInvoiceBalance) - Number(obligations)
+  // salário só entra como base quando o saldo está zerado (o salário É o saldo
+  // de partida); havendo saldo, projeta-se a partir dele, sem somar os dois.
+  const base = Number(balance) === 0 ? Number(salary) : Number(balance)
+  return base - Number(openInvoiceBalance) - Number(obligations)
 }
 
 // Build a 6-month forward projection for the dashboard chart.
