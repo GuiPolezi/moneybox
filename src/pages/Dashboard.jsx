@@ -127,7 +127,7 @@ export default function Dashboard() {
         />
       </section>
 
-      {/* obligations strip */}
+      {/* obligations strip 
       <Card className="p-4 flex flex-wrap items-center gap-x-6 gap-y-2">
         <span className="text-xs uppercase tracking-wider text-ink/50">Compromissos do mês</span>
         <span className="text-sm">Contas fixas <Money value={obligations.fixed} className="ml-1" /></span>
@@ -135,7 +135,7 @@ export default function Dashboard() {
         <span className="text-sm font-medium">Total <Money value={obligations.total} className="ml-1" /></span>
         <span className="text-sm">Em aberto <Money value={openObl.total} className="ml-1" /></span>
         <span className="text-xs text-currency font-medium">{paidPct}% pago</span>
-      </Card>
+      </Card> */}
 
       {/* projeções */}
       <section className="space-y-3">
