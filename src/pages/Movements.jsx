@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useFinance } from '../context/FinanceContext'
 import { Button, Card, Field, Input, Money, Pill, Select } from '../components/ui/primitives'
+import { sanitizeAmountInput, parseAmount } from '../lib/finance'
 
 const CATS = ['Mercado', 'Transporte', 'Lazer', 'Saúde', 'Casa', 'Compra', 'Outros']
 
@@ -16,10 +17,11 @@ export default function Movements() {
 
   const submit = async (e) => {
     e.preventDefault()
-    if (!amount || Number(amount) <= 0) return
+    const value = parseAmount(amount)
+    if (!value || isNaN(value) || value <= 0) return
     setBusy(true); setNote(null)
     const { spilled } = await addMovement({
-      kind, method: kind === 'income' ? 'cash' : method, amount, category, description,
+      kind, method: kind === 'income' ? 'cash' : method, amount: value, category, description,
     })
     setBusy(false)
     setAmount(''); setDescription('')
@@ -45,8 +47,8 @@ export default function Movements() {
             </div>
 
             <Field label="Valor">
-              <Input type="number" step="0.01" min="0" inputMode="decimal"
-                value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" className="figure" />
+              <Input type="text" inputMode="decimal"
+                value={amount} onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))} placeholder="0,00" className="figure" />
             </Field>
 
             {kind === 'expense' && (

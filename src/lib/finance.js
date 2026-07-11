@@ -10,6 +10,24 @@ export const BRL = (n) =>
     minimumFractionDigits: 2,
   })
 
+// ── Entrada de valores em pt-BR ─────────────────────────────────────────────
+// O <input type="number"> só aceita ponto como separador decimal, mas o teclado
+// do celular em português oferece vírgula. Por isso os campos de dinheiro usam
+// type="text"/inputMode="decimal" e passam por estes utilitários.
+
+// Filtra o que o usuário digita: mantém só dígitos, vírgula e ponto.
+export const sanitizeAmountInput = (str) =>
+  String(str ?? '').replace(/[^\d.,]/g, '')
+
+// Converte o texto digitado em número. Aceita vírgula OU ponto como decimal e
+// lida com separador de milhar no padrão brasileiro (ex.: "1.234,56" -> 1234.56).
+export const parseAmount = (str) => {
+  if (str === null || str === undefined || str === '') return NaN
+  let s = String(str).trim().replace(/\s/g, '')
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.')
+  return Number(s)
+}
+
 // Parse a value as a LOCAL date. Date-only strings ("2026-07-01") are otherwise
 // read as UTC midnight and slip to the previous day in negative-offset zones
 // (e.g. UTC−3 / São Paulo), which shows the wrong month. Full timestamps and

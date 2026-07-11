@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useFinance } from '../context/FinanceContext'
 import { Button, Card, Field, Input, Money } from '../components/ui/primitives'
+import { sanitizeAmountInput, parseAmount } from '../lib/finance'
 
 export default function Settings() {
   const { profile, updateProfile } = useFinance()
@@ -21,9 +22,9 @@ export default function Settings() {
   const save = async () => {
     await updateProfile({
       display_name: form.display_name,
-      salary: Number(form.salary),
+      salary: parseAmount(form.salary),
       salary_day: Number(form.salary_day),
-      balance: Number(form.balance),
+      balance: parseAmount(form.balance),
     })
     setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
@@ -41,7 +42,7 @@ export default function Settings() {
         </Field>
 
         <Field label="Salário (fixo)" hint="Valor que você recebe todo mês. Muda só quando troca de emprego.">
-          <Input type="number" step="0.01" value={form.salary} onChange={set('salary')} className="figure" />
+          <Input type="text" inputMode="decimal" value={form.salary} onChange={(e) => setForm({ ...form, salary: sanitizeAmountInput(e.target.value) })} className="figure" />
         </Field>
 
         <Field label="Dia do pagamento" hint="Quinto dia útil ≈ dia 5. A fatura vence neste dia.">
@@ -49,7 +50,7 @@ export default function Settings() {
         </Field>
 
         <Field label="Saldo atual" hint="Quanto você tem disponível agora. As movimentações partem daqui.">
-          <Input type="number" step="0.01" value={form.balance} onChange={set('balance')} className="figure" />
+          <Input type="text" inputMode="decimal" value={form.balance} onChange={(e) => setForm({ ...form, balance: sanitizeAmountInput(e.target.value) })} className="figure" />
         </Field>
 
         <div className="flex items-center gap-3 pt-2">

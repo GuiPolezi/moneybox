@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useFinance } from '../context/FinanceContext'
 import { Button, Card, Field, Input, Money, Pill } from '../components/ui/primitives'
 import { Guilloche } from '../components/Ornament'
-import { BRL, invoiceBalance, monthLabel } from '../lib/finance'
+import { BRL, invoiceBalance, monthLabel, sanitizeAmountInput, parseAmount } from '../lib/finance'
 
 export default function Invoice() {
   const { invoice, allInvoices, openInvoiceBalance, payInvoice, finalizeInvoice, rollInvoice } = useFinance()
@@ -15,8 +15,8 @@ export default function Invoice() {
     ? Math.min(100, (Number(invoice.paid_amount) / Math.max(1, Number(invoice.total_amount) + Number(invoice.carried_amount))) * 100)
     : 0
 
-  const partialValue = Number(pay)
-  const partialValid = pay !== '' && partialValue > 0
+  const partialValue = parseAmount(pay)
+  const partialValid = pay !== '' && !isNaN(partialValue) && partialValue > 0
   const canPay = !!invoice && due > 0.001
 
   const doPayFull = async () => {
@@ -77,8 +77,8 @@ export default function Invoice() {
           <h3 className="font-display text-lg text-ink">Pagar fatura</h3>
           <p className="text-sm text-ink/60">O pagamento sai do seu saldo. Pode pagar tudo ou um valor parcial.</p>
           <Field label="Valor a pagar">
-            <Input type="number" step="0.01" min="0" value={pay}
-              onChange={(e) => { setPay(e.target.value); setError(null) }}
+            <Input type="text" inputMode="decimal" value={pay}
+              onChange={(e) => { setPay(sanitizeAmountInput(e.target.value)); setError(null) }}
               placeholder={BRL(due)} className="figure" disabled={!canPay} />
           </Field>
           {error && <p className="text-sm text-oxblood bg-oxblood/5 border border-oxblood/20 rounded-sm p-2">{error}</p>}

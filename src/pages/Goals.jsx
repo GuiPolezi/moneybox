@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useFinance } from '../context/FinanceContext'
 import { Modal } from '../components/Ornament'
 import { Button, Card, Field, Input, Money, Select } from '../components/ui/primitives'
-import { BRL, GOAL_COLORS } from '../lib/finance'
+import { BRL, GOAL_COLORS, sanitizeAmountInput, parseAmount } from '../lib/finance'
 
 export default function Goals() {
   const { goals, profile, addGoal, deleteGoal, moveGoal } = useFinance()
@@ -82,14 +82,14 @@ function CreateModal({ open, onClose, onSave }) {
   const [color, setColor] = useState('currency'); const [deadline, setDeadline] = useState('')
   const save = async () => {
     if (!name || !target) return
-    await onSave({ name, target_amount: Number(target), color, deadline: deadline || null })
+    await onSave({ name, target_amount: parseAmount(target), color, deadline: deadline || null })
     setName(''); setTarget(''); setColor('currency'); setDeadline(''); onClose()
   }
   return (
     <Modal open={open} onClose={onClose} title="Nova meta">
       <div className="space-y-4">
         <Field label="Nome da meta"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex.: Viagem" /></Field>
-        <Field label="Valor alvo"><Input type="number" step="0.01" value={target} onChange={(e) => setTarget(e.target.value)} className="figure" placeholder="0,00" /></Field>
+        <Field label="Valor alvo"><Input type="text" inputMode="decimal" value={target} onChange={(e) => setTarget(sanitizeAmountInput(e.target.value))} className="figure" placeholder="0,00" /></Field>
         <Field label="Cor">
           <Select value={color} onChange={(e) => setColor(e.target.value)}>
             <option value="currency">Verde cédula</option>
@@ -119,9 +119,9 @@ function FundModal({ state, balance, onClose, onConfirm }) {
             : <>O valor volta da caixinha para o seu saldo.</>}
         </p>
         <Field label="Valor">
-          <Input type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="figure" placeholder="0,00" autoFocus />
+          <Input type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))} className="figure" placeholder="0,00" autoFocus />
         </Field>
-        <Button onClick={() => amount > 0 && onConfirm(amount)} className="w-full">
+        <Button onClick={() => { const v = parseAmount(amount); if (v > 0) onConfirm(v) }} className="w-full">
           {deposit ? 'Guardar' : 'Resgatar'}
         </Button>
       </div>

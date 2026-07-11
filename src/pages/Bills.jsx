@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useFinance } from '../context/FinanceContext'
 import { Modal } from '../components/Ornament'
 import { Button, Card, Field, Input, Money, Pill } from '../components/ui/primitives'
+import { sanitizeAmountInput, parseAmount } from '../lib/finance'
 
 export default function Bills() {
   const {
@@ -129,14 +130,14 @@ function FixedBillModal({ open, onClose, onSave }) {
   const [name, setName] = useState(''); const [amount, setAmount] = useState(''); const [due, setDue] = useState('10')
   const save = async () => {
     if (!name || !amount) return
-    await onSave({ name, amount: Number(amount), due_day: Number(due) })
+    await onSave({ name, amount: parseAmount(amount), due_day: Number(due) })
     setName(''); setAmount(''); setDue('10'); onClose()
   }
   return (
     <Modal open={open} onClose={onClose} title="Nova conta fixa">
       <div className="space-y-4">
         <Field label="Nome"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex.: Academia" /></Field>
-        <Field label="Valor mensal"><Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="figure" placeholder="0,00" /></Field>
+        <Field label="Valor mensal"><Input type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))} className="figure" placeholder="0,00" /></Field>
         <Field label="Dia de vencimento"><Input type="number" min="1" max="31" value={due} onChange={(e) => setDue(e.target.value)} className="figure" /></Field>
         <Button onClick={save} className="w-full">Salvar conta fixa</Button>
       </div>
@@ -148,14 +149,14 @@ function InstallmentModal({ open, onClose, onSave }) {
   const [name, setName] = useState(''); const [amount, setAmount] = useState(''); const [count, setCount] = useState(''); const [due, setDue] = useState('10')
   const save = async () => {
     if (!name || !amount || !count) return
-    await onSave({ name, installment_amount: Number(amount), total_count: Number(count), due_day: Number(due) })
+    await onSave({ name, installment_amount: parseAmount(amount), total_count: Number(count), due_day: Number(due) })
     setName(''); setAmount(''); setCount(''); onClose()
   }
   return (
     <Modal open={open} onClose={onClose} title="Nova parcela">
       <div className="space-y-4">
         <Field label="Descrição"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex.: Notebook" /></Field>
-        <Field label="Valor da parcela"><Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="figure" placeholder="0,00" /></Field>
+        <Field label="Valor da parcela"><Input type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))} className="figure" placeholder="0,00" /></Field>
         <Field label="Número de parcelas"><Input type="number" min="1" value={count} onChange={(e) => setCount(e.target.value)} className="figure" placeholder="12" /></Field>
         <Field label="Dia de vencimento"><Input type="number" min="1" max="31" value={due} onChange={(e) => setDue(e.target.value)} className="figure" /></Field>
         <Button onClick={save} className="w-full">Salvar parcela</Button>
