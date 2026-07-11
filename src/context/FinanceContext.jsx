@@ -189,6 +189,10 @@ export function FinanceProvider({ children }) {
     await supabase.from('fixed_bills').delete().eq('id', id)
     await refresh()
   }
+  const updateFixedBill = async (id, patch) => {
+    await supabase.from('fixed_bills').update(patch).eq('id', id)
+    await refresh()
+  }
   const payFixedBill = async (bill, via = 'cash') => {
     if (via === 'credit') await bumpInvoice(bill.amount)
     else await spendCash(bill.amount)
@@ -209,6 +213,10 @@ export function FinanceProvider({ children }) {
   }
   const deleteInstallment = async (id) => {
     await supabase.from('installments').delete().eq('id', id)
+    await refresh()
+  }
+  const updateInstallment = async (id, patch) => {
+    await supabase.from('installments').update(patch).eq('id', id)
     await refresh()
   }
   const payInstallment = async (inst, via = 'cash') => {
@@ -255,8 +263,8 @@ export function FinanceProvider({ children }) {
     loading, profile, invoice, allInvoices, movements, fixedBills, billPayments,
     installments, goals, snapshots, thisMonth, obligations, openInvoiceBalance,
     refresh, updateProfile, addMovement, payInvoice, finalizeInvoice, rollInvoice,
-    addFixedBill, toggleFixedBill, deleteFixedBill, payFixedBill,
-    addInstallment, deleteInstallment, payInstallment,
+    addFixedBill, toggleFixedBill, deleteFixedBill, updateFixedBill, payFixedBill,
+    addInstallment, deleteInstallment, updateInstallment, payInstallment,
     addGoal, deleteGoal, moveGoal,
   }
 
