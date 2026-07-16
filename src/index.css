@@ -2,56 +2,226 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
+/* ══════════════════════════════════════════════════════════════════════════
+   MoneyBox — Aero
+   Vidro, luz e um espectro aqua→lima. Duas paletas, um só vocabulário:
+   tudo abaixo é um trio "R G B" que o Tailwind lê via rgb(var(--x) / alpha).
+   ══════════════════════════════════════════════════════════════════════════ */
 
-html, body, #root { height: 100%; }
-html { -webkit-text-size-adjust: 100%; }
+@layer base {
+  /* ── Tema claro — céu, água, vidro fosco ───────────────────────────── */
+  :root {
+    --c-canvas:    234 246 251;
+    --c-surface:   255 255 255;
+    --c-surface-2: 244 251 253;
+    --c-line:      184 210 222;
+    --c-line-2:    212 232 240;
 
-body {
-  margin: 0;
-  overflow-x: hidden; /* nada de rolagem horizontal acidental no celular */
-  background-color: #E9E3D2;
-  /* faint engraved-paper grain */
-  background-image:
-    repeating-linear-gradient(0deg, rgba(35,74,60,0.018) 0 1px, transparent 1px 3px),
-    radial-gradient(circle at 20% -10%, rgba(176,137,74,0.10), transparent 45%);
-  color: #1C2620;
-  font-family: 'Work Sans', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
+    --c-fg:        12  42  56;
+    --c-muted:     72  106 124;
+    --c-subtle:    124 154 170;
+
+    --c-brand:     6   165 200;
+    --c-brand-2:   34  211 238;
+    --c-accent:    132 204 22;
+    --c-sky:       56  189 248;
+
+    --c-pos:       5   150 105;
+    --c-neg:       225 29  72;
+    --c-warn:      245 158 11;
+
+    /* Tinta escura sobre as superfícies aqua vivas. Branco sobre #22D3EE dá
+       ~2:1 de contraste (reprova no WCAG AA); esta tinta passa folgado e
+       mantém o brilho aero. A mesma regra vale nos dois temas. */
+    --c-onbrand:   3   37  47;
+
+    --glass-bg:     255 255 255;
+    --glass-alpha:  0.62;
+    --glass-border: 0.75;
+
+    --shadow-glass: 0 1px 1px rgba(12,42,56,.04), 0 8px 24px -12px rgba(12,42,56,.18);
+    --shadow-lift:  0 2px 4px rgba(12,42,56,.05), 0 18px 40px -18px rgba(12,42,56,.28);
+    --shadow-glow:  0 8px 30px -8px rgba(6,165,200,.45);
+    --shadow-inset: inset 0 1px 0 rgba(255,255,255,.9);
+
+    color-scheme: light;
+  }
+
+  /* ── Tema escuro — meia-noite azul-petróleo, acentos luminosos ──────── */
+  :root.dark {
+    --c-canvas:    6   20  27;
+    --c-surface:   17  38  50;
+    --c-surface-2: 12  30  40;
+    --c-line:      44  76  94;
+    --c-line-2:    32  58  72;
+
+    --c-fg:        226 244 252;
+    --c-muted:     148 180 196;
+    --c-subtle:    102 136 154;
+
+    --c-brand:     34  211 238;
+    --c-brand-2:   103 232 249;
+    --c-accent:    163 230 53;
+    --c-sky:       56  189 248;
+
+    --c-pos:       52  211 153;
+    --c-neg:       251 113 133;
+    --c-warn:      251 191 36;
+
+    --c-onbrand:   4   26  35;
+
+    --glass-bg:     190 232 248;
+    --glass-alpha:  0.06;
+    --glass-border: 0.12;
+
+    --shadow-glass: 0 1px 1px rgba(0,0,0,.3), 0 10px 30px -12px rgba(0,0,0,.7);
+    --shadow-lift:  0 2px 6px rgba(0,0,0,.35), 0 22px 48px -20px rgba(0,0,0,.8);
+    --shadow-glow:  0 8px 34px -8px rgba(34,211,238,.4);
+    --shadow-inset: inset 0 1px 0 rgba(255,255,255,.08);
+
+    color-scheme: dark;
+  }
+
+  html, body, #root { height: 100%; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    overflow-x: hidden;
+    background-color: rgb(var(--c-canvas));
+    color: rgb(var(--c-fg));
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  img, svg { max-width: 100%; }
+
+  /* foco sempre visível — anel aqua */
+  :where(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid rgb(var(--c-brand));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection { background: rgb(var(--c-brand) / .25); }
+
+  /* barra de rolagem discreta e no tom do tema */
+  * { scrollbar-width: thin; scrollbar-color: rgb(var(--c-line)) transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb {
+    background: rgb(var(--c-line));
+    border-radius: 99px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-track { background: transparent; }
 }
 
-/* imagens e svg nunca estouram o container */
-img, svg { max-width: 100%; }
+@layer components {
+  /* ── Vidro: a superfície-assinatura do sistema ───────────────────────── */
+  .glass {
+    background: rgb(var(--glass-bg) / var(--glass-alpha));
+    border: 1px solid rgb(255 255 255 / var(--glass-border));
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: var(--shadow-glass), var(--shadow-inset);
+  }
+  :root.dark .glass { border-color: rgb(var(--c-line) / .5); }
 
-/* rolagem horizontal suave (menu no celular) sem barra visível */
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
+  /* vidro que reage ao ponteiro */
+  .glass-hover {
+    transition: transform .25s cubic-bezier(.16,1,.3,1),
+                box-shadow .25s ease, border-color .25s ease;
+  }
+  @media (hover: hover) {
+    .glass-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lift), var(--shadow-inset);
+      border-color: rgb(var(--c-brand) / .4);
+    }
+  }
 
-/* every monetary figure rides the ledger rail: tabular mono numerals */
-.figure {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-feature-settings: 'tnum' 1, 'lnum' 1;
-  letter-spacing: -0.01em;
+  /* ── Aurora: o "céu" aero vivo atrás de tudo ─────────────────────────── */
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .aurora::before,
+  .aurora::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .55;
+  }
+  .aurora::before {
+    width: 60vw; height: 60vw;
+    top: -22vw; left: -12vw;
+    background: radial-gradient(circle, rgb(var(--c-brand-2) / .55), transparent 68%);
+    animation: float 14s ease-in-out infinite;
+  }
+  .aurora::after {
+    width: 55vw; height: 55vw;
+    bottom: -24vw; right: -14vw;
+    background: radial-gradient(circle, rgb(var(--c-accent) / .38), transparent 68%);
+    animation: float 18s ease-in-out infinite reverse;
+  }
+  :root.dark .aurora::before { opacity: .28; }
+  :root.dark .aurora::after  { opacity: .18; }
+
+  /* ── Números: sempre no trilho monoespaçado e tabular ────────────────── */
+  .figure {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1, 'lnum' 1, 'zero' 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* texto com o gradiente aqua — só para títulos curtos */
+  .gradient-text {
+    background: linear-gradient(100deg, rgb(var(--c-brand)), rgb(var(--c-sky)) 45%, rgb(var(--c-accent)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .rule { border-bottom: 1px solid rgb(var(--c-line-2)); }
+
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* esqueleto/carregando */
+  .shimmer {
+    background: linear-gradient(90deg,
+      rgb(var(--c-line-2) / .2) 25%,
+      rgb(var(--c-brand) / .18) 50%,
+      rgb(var(--c-line-2) / .2) 75%);
+    background-size: 200% 100%;
+  }
 }
 
-/* hairline ledger rule */
-.rule { border-bottom: 1px solid #C8C0A8; }
-
-/* keyboard focus stays visible everywhere */
-:where(button, a, input, select, textarea):focus-visible {
-  outline: 2px solid #234A3C;
-  outline-offset: 2px;
+@layer utilities {
+  /* respeita a barra de gestos do iOS na navegação inferior */
+  .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + .5rem); }
 }
+
+/* recharts herda o tema */
+.recharts-default-tooltip {
+  background: rgb(var(--c-surface)) !important;
+  border: 1px solid rgb(var(--c-line-2)) !important;
+  border-radius: 12px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+  box-shadow: var(--shadow-lift) !important;
+}
+.recharts-surface { overflow: visible; }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
-}
-
-/* recharts: quiet the default tooltip */
-.recharts-default-tooltip {
-  background: #F2EEE1 !important;
-  border: 1px solid #C8C0A8 !important;
-  border-radius: 2px !important;
-  font-family: 'IBM Plex Mono', monospace !important;
-  font-size: 12px !important;
+  *, .aurora::before, .aurora::after {
+    animation: none !important;
+    transition-duration: 0.001ms !important;
+  }
 }

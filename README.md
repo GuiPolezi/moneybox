@@ -1,8 +1,32 @@
 # MoneyBox · livro-caixa pessoal
 
 Controle financeiro com Supabase (back-end) + React/Vite + TailwindCSS.
-Estética de **cédula gravada / livro-caixa**: verde-cédula e dourado sobre papel
-envelhecido, com toda cifra em fonte mono tabular (como num livro de contas).
+
+Estética **Aero**: moderna, minimalista e futurista — vidro fosco (glassmorphism),
+um espectro aqua→lima e luz de aurora ao fundo, com toda cifra em fonte mono
+tabular. Tema **claro e escuro**, alternável e com respeito à preferência do
+sistema.
+
+### Sistema de design
+
+Os tokens vivem em variáveis CSS (`src/index.css`) como trios `R G B`, e o
+Tailwind os lê via `rgb(var(--token) / <alpha-value>)` (`tailwind.config.js`).
+Trocar o tema troca só as variáveis — nenhum componente conhece cores fixas.
+
+| Token | Papel |
+|---|---|
+| `canvas` / `surface` / `line` | fundo, superfícies e traços |
+| `fg` / `muted` / `subtle` | hierarquia de texto |
+| `brand` / `brand2` / `sky` / `accent` | espectro aero (aqua → lima) |
+| `pos` / `neg` / `warn` | semântica de dinheiro |
+| `onbrand` | tinta escura sobre superfícies aqua vivas |
+
+Regra de contraste: **superfície aqua viva sempre carrega tinta escura**
+(`onbrand`) — nos dois temas. Texto branco sobre `#22D3EE` daria 1.8:1 e
+reprovaria no WCAG AA; a tinta escura passa com folga (8.9:1).
+
+Utilitários próprios: `.glass` (vidro), `.aurora` (luz de fundo), `.figure`
+(cifras mono tabulares), `.gradient-text`.
 
 ---
 
@@ -62,8 +86,10 @@ src/lib/finance.js         Regras puras: formatação, projeção, obrigações
 src/lib/supabase.js        Cliente Supabase
 src/context/AuthContext    Sessão, login, cadastro
 src/context/FinanceContext Carrega dados e aplica as regras (mutações)
+src/context/ThemeContext   Tema claro/escuro (localStorage + preferência do SO)
 src/pages/                 Auth, Dashboard, Movements, Invoice, Bills, Goals, Settings
-src/components/            Layout, ornamento guilloché, primitivos de UI
+src/components/            Layout (trilho + navegação inferior), ornamentos aero
+src/components/ui/         primitives.jsx (Button, Card, Money…), icons.jsx
 ```
 
 ## 5. Build de produção

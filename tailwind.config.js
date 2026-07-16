@@ -1,31 +1,84 @@
 /** @type {import('tailwindcss').Config} */
+
+// Cada token é uma variável CSS com um trio "R G B", então as duas paletas
+// (clara e escura) trocam sozinhas e as utilidades de opacidade do Tailwind
+// (bg-surface/60) continuam funcionando.
+const v = (name) => `rgb(var(${name}) / <alpha-value>)`
+
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        // Engraved-banknote / ledger palette
-        paper:    '#E9E3D2', // aged note paper
-        paper2:   '#F2EEE1', // lighter card surface
-        ink:      '#1C2620', // engraving ink (near-black green)
-        currency: '#234A3C', // deep banknote green (primary)
-        currency2:'#2F6450', // lighter green
-        brass:    '#B0894A', // foil / coin gold (accent)
-        brass2:   '#C9A24B',
-        oxblood:  '#7E3030', // negatives / danger
-        sage:     '#BFC4AC', // muted secondary
-        line:     '#C8C0A8', // hairline rules
+        // superfícies
+        canvas:   v('--c-canvas'),
+        surface:  v('--c-surface'),
+        surface2: v('--c-surface-2'),
+        line:     v('--c-line'),
+        line2:    v('--c-line-2'),
+
+        // texto
+        fg:       v('--c-fg'),
+        muted:    v('--c-muted'),
+        subtle:   v('--c-subtle'),
+
+        // espectro aero
+        brand:    v('--c-brand'),   // aqua — primária
+        brand2:   v('--c-brand-2'), // ciano claro
+        accent:   v('--c-accent'),  // lima/verde — energia
+        sky:      v('--c-sky'),
+
+        // semântica de dinheiro
+        pos:      v('--c-pos'),
+        neg:      v('--c-neg'),
+        warn:     v('--c-warn'),
+
+        // sempre-escuro/claro para texto sobre gradiente aqua
+        onbrand:  v('--c-onbrand'),
       },
       fontFamily: {
-        display: ['Fraunces', 'Georgia', 'serif'],
-        sans:    ['Work Sans', 'system-ui', 'sans-serif'],
-        mono:    ['IBM Plex Mono', 'ui-monospace', 'monospace'],
+        display: ['Outfit', 'system-ui', 'sans-serif'],
+        sans:    ['Inter', 'system-ui', 'sans-serif'],
+        mono:    ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
-      fontFeatureSettings: {
-        tnum: '"tnum" 1, "lnum" 1',
+      borderRadius: {
+        xl: '1rem',
+        '2xl': '1.25rem',
+        '3xl': '1.75rem',
       },
       boxShadow: {
-        note: '0 1px 0 rgba(28,38,32,0.05), 0 12px 30px -18px rgba(28,38,32,0.45)',
+        glass:  'var(--shadow-glass)',
+        lift:   'var(--shadow-lift)',
+        glow:   'var(--shadow-glow)',
+        inset:  'var(--shadow-inset)',
+      },
+      backdropBlur: {
+        glass: '20px',
+      },
+      keyframes: {
+        float: {
+          '0%,100%': { transform: 'translateY(0) scale(1)' },
+          '50%':     { transform: 'translateY(-14px) scale(1.04)' },
+        },
+        drift: {
+          '0%':   { transform: 'translate3d(0,0,0) rotate(0deg)' },
+          '100%': { transform: 'translate3d(0,0,0) rotate(360deg)' },
+        },
+        rise: {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        },
+        sheen: {
+          '0%':   { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+      },
+      animation: {
+        float: 'float 9s ease-in-out infinite',
+        drift: 'drift 40s linear infinite',
+        rise:  'rise .4s cubic-bezier(.16,1,.3,1) both',
+        sheen: 'sheen 2.2s linear infinite',
       },
     },
   },

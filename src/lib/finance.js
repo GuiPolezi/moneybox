@@ -193,10 +193,21 @@ export function projectionSeries({
 export const todayDay = () => new Date().getDate()
 
 // colour token → hex for goal "boxes"
+// As CHAVES ficam gravadas no banco (goals.color), então elas não mudam —
+// só os valores, agora no espectro aero. Metas antigas seguem válidas.
 export const GOAL_COLORS = {
-  currency: '#234A3C',
-  brass: '#B0894A',
-  oxblood: '#7E3030',
-  sage: '#6E7558',
-  ink: '#3A4A40',
+  currency: '#06A5C8', // aqua
+  brass:    '#84CC16', // lima
+  oxblood:  '#F43F5E', // coral
+  sage:     '#38BDF8', // céu
+  ink:      '#8B5CF6', // violeta
+}
+
+// Gradiente correspondente a cada cor de meta — o brilho aero das barras.
+export const GOAL_GRADIENTS = {
+  currency: 'linear-gradient(90deg, #22D3EE, #06A5C8)',
+  brass:    'linear-gradient(90deg, #BEF264, #84CC16)',
+  oxblood:  'linear-gradient(90deg, #FB7185, #F43F5E)',
+  sage:     'linear-gradient(90deg, #7DD3FC, #38BDF8)',
+  ink:      'linear-gradient(90deg, #A78BFA, #8B5CF6)',
 }

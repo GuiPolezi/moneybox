@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useFinance } from '../context/FinanceContext'
-import { Button, Card, Field, Input, Money, Pill } from '../components/ui/primitives'
-import { Guilloche } from '../components/Ornament'
+import { Button, Card, Field, Input, Money, Pill, PageHead, EmptyState } from '../components/ui/primitives'
+import { Bubbles } from '../components/Ornament'
+import { IconCard } from '../components/ui/icons'
 import { BRL, invoiceBalance, monthLabel, sanitizeAmountInput, parseAmount } from '../lib/finance'
 
 export default function Invoice() {
@@ -35,72 +36,107 @@ export default function Invoice() {
     setPay('')
   }
 
-  return (
-    <div className="space-y-8">
-      <header>
-        <p className="text-xs uppercase tracking-[0.25em] text-ink/50">Fatura</p>
-        <h1 className="font-display text-3xl text-ink">Cartão de crédito</h1>
-        <p className="text-sm text-ink/60 mt-1">soma de todos os cartões · vence dia {invoice?.due_day ?? 5}</p>
-      </header>
+  const status = invoice?.status === 'finalized' ? 'finalizada'
+    : invoice?.status === 'paid' ? 'quitada' : 'em aberto'
 
-      {/* the open invoice, drawn like a banknote */}
-      <Card className="p-6 relative overflow-hidden bg-green-900 text-paper2 border-currency">
-        <Guilloche className="absolute -right-16 -top-10 w-96" color="#E9E3D2" opacity={0.14} />
-        <Guilloche className="absolute -left-24 bottom-0 w-96" color="#C9A24B" opacity={0.12} />
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <PageHead eyebrow="Fatura" title="Cartão de crédito">
+        soma de todos os cartões · vence dia {invoice?.due_day ?? 5}
+      </PageHead>
+
+      {/* ── O cartão ──────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden rounded-3xl p-6 sm:p-8 shadow-lift animate-rise
+                          bg-gradient-to-br from-brand2 via-sky to-brand">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/20" />
+        <Bubbles count={5} />
+
         <div className="relative">
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-[0.25em] text-paper2/70">
-              Fatura {invoice ? monthLabel(invoice.reference_month) : '—'}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-onbrand/80">
+              <IconCard size={16} />
+              <span className="text-xs font-medium uppercase tracking-[0.18em]">
+                Fatura {invoice ? monthLabel(invoice.reference_month) : '—'}
+              </span>
+            </div>
+            <span className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full
+                             bg-white/20 text-onbrand backdrop-blur-sm border border-white/25">
+              {status}
             </span>
-            <Pill tone="brass">{invoice?.status === 'finalized' ? 'finalizada' : invoice?.status === 'paid' ? 'quitada' : 'em aberto'}</Pill>
           </div>
 
-          <Money value={due} className="block text-3xl sm:text-5xl mt-3 break-words" />
-          <p className="text-paper2/70 text-sm mt-1">valor em aberto</p>
+          <Money value={due} colored={false}
+            className="block text-4xl sm:text-6xl mt-4 text-onbrand break-words tracking-tight" />
+          <p className="text-onbrand/70 text-sm mt-1.5">valor em aberto</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-6 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7">
             <Mini label="Gastos do ciclo" value={invoice?.total_amount} />
-            <Mini label="Saldo de meses anteriores" value={invoice?.carried_amount} />
+            <Mini label="Meses anteriores" value={invoice?.carried_amount} />
             <Mini label="Já pago" value={invoice?.paid_amount} />
           </div>
 
-          {/* progress */}
-          <div className="mt-5 h-2 bg-paper2/20 rounded-full overflow-hidden">
-            <div className="h-full bg-brass" style={{ width: `${pct}%` }} />
+          <div className="mt-6">
+            <div className="flex justify-between text-[11px] text-onbrand/70 mb-1.5">
+              <span>progresso do pagamento</span>
+              <span className="figure font-medium">{pct.toFixed(0)}%</span>
+            </div>
+            <div className="h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
+              <div
+                className="h-full rounded-full transition-[width] duration-700 ease-out
+                           bg-gradient-to-r from-accent to-[#BEF264] shadow-[0_0_12px_rgba(163,230,53,.6)]"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
           </div>
         </div>
-      </Card>
+      </section>
 
-      {/* actions */}
+      {/* ── Ações ─────────────────────────────────────────────────────── */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <Card className="p-5 space-y-4">
-          <h3 className="font-display text-lg text-ink">Pagar fatura</h3>
-          <p className="text-sm text-ink/60">O pagamento sai do seu saldo. Pode pagar tudo ou um valor parcial.</p>
-          <Field label="Valor a pagar">
-            <Input type="text" inputMode="decimal" value={pay}
-              onChange={(e) => { setPay(sanitizeAmountInput(e.target.value)); setError(null) }}
-              placeholder={BRL(due)} className="figure" disabled={!canPay} />
-          </Field>
-          {error && <p className="text-sm text-oxblood bg-oxblood/5 border border-oxblood/20 rounded-sm p-2">{error}</p>}
-          <div className="flex gap-2">
-            <Button onClick={doPayPartial} variant="ghost" disabled={!canPay || !partialValid}>Pagar parcial</Button>
-            <Button onClick={doPayFull} disabled={!canPay}>Pagar total</Button>
+        <Card className="p-5 sm:p-6 space-y-4" hover>
+          <div>
+            <h3 className="font-display text-lg font-semibold text-fg tracking-tight">Pagar fatura</h3>
+            <p className="text-sm text-muted mt-1 leading-relaxed">
+              O pagamento sai do seu saldo. Pode pagar tudo ou um valor parcial.
+            </p>
           </div>
-          {!canPay && invoice && <p className="text-xs text-ink/45">Não há valor em aberto para pagar.</p>}
+          <Field label="Valor a pagar">
+            <Input
+              type="text" inputMode="decimal" value={pay}
+              onChange={(e) => { setPay(sanitizeAmountInput(e.target.value)); setError(null) }}
+              placeholder={BRL(due)} className="figure" disabled={!canPay}
+            />
+          </Field>
+          {error && (
+            <p className="text-sm text-neg bg-neg/5 border border-neg/20 rounded-xl p-3">{error}</p>
+          )}
+          <div className="flex gap-2">
+            <Button onClick={doPayPartial} variant="ghost" disabled={!canPay || !partialValid} className="flex-1">
+              Pagar parcial
+            </Button>
+            <Button onClick={doPayFull} disabled={!canPay} className="flex-1">Pagar total</Button>
+          </div>
+          {!canPay && invoice && (
+            <p className="text-xs text-subtle">Não há valor em aberto para pagar.</p>
+          )}
         </Card>
 
-        <Card className="p-5 space-y-4">
-          <h3 className="font-display text-lg text-ink">Encerrar ou rolar</h3>
+        <Card className="p-5 sm:p-6 space-y-4" hover>
+          <h3 className="font-display text-lg font-semibold text-fg tracking-tight">Encerrar ou rolar</h3>
           {paidInFull ? (
             <>
-              <p className="text-sm text-ink/60">Fatura quitada. Você pode finalizá-la para encerrar este ciclo.</p>
-              <Button variant="brass" onClick={finalizeInvoice} className="w-full">Finalizar fatura</Button>
+              <p className="text-sm text-muted leading-relaxed">
+                Fatura quitada. Você pode finalizá-la para encerrar este ciclo.
+              </p>
+              <Button variant="accent" onClick={finalizeInvoice} className="w-full">
+                Finalizar fatura
+              </Button>
             </>
           ) : (
             <>
-              <p className="text-sm text-ink/60">
-                Não vai pagar tudo? Role o saldo restante para o mês seguinte —
-                ele sobe com juros de {((invoice?.interest_rate ?? 0.12) * 100).toFixed(0)}% e abre a próxima fatura.
+              <p className="text-sm text-muted leading-relaxed">
+                Não vai pagar tudo? Role o saldo restante para o mês seguinte — ele sobe com
+                juros de {((invoice?.interest_rate ?? 0.12) * 100).toFixed(0)}% e abre a próxima fatura.
               </p>
               <Button variant="danger" onClick={rollInvoice} disabled={!invoice || due <= 0} className="w-full">
                 Rolar restante (+ juros)
@@ -110,22 +146,25 @@ export default function Invoice() {
         </Card>
       </div>
 
-      {/* history */}
-      <Card className="p-0 overflow-hidden">
-        <div className="p-4 rule">
-          <h3 className="font-display text-lg text-ink">Faturas anteriores</h3>
+      {/* ── Histórico ─────────────────────────────────────────────────── */}
+      <Card className="overflow-hidden">
+        <div className="px-5 py-4 rule">
+          <h3 className="font-display text-lg font-semibold text-fg tracking-tight">Faturas anteriores</h3>
         </div>
         {allInvoices.length === 0 ? (
-          <p className="p-6 text-sm text-ink/50">Nenhuma fatura registrada.</p>
+          <EmptyState icon={<IconCard />} text="Nenhuma fatura registrada ainda." />
         ) : (
           <ul>
             {allInvoices.map((inv) => (
-              <li key={inv.id} className="flex items-center justify-between px-4 py-3 rule last:border-0">
-                <div>
-                  <span className="text-sm text-ink">{monthLabel(inv.reference_month)}</span>
-                  <span className="ml-2"><Pill tone={inv.status === 'finalized' ? 'sage' : inv.status === 'paid' ? 'currency' : 'oxblood'}>{inv.status}</Pill></span>
+              <li key={inv.id} className="flex items-center justify-between gap-3 px-5 py-3.5
+                                          rule last:border-0 hover:bg-fg/[.02] transition-colors">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-sm text-fg capitalize truncate">{monthLabel(inv.reference_month)}</span>
+                  <Pill tone={inv.status === 'finalized' ? 'neutral' : inv.status === 'paid' ? 'pos' : 'warn'}>
+                    {inv.status === 'finalized' ? 'finalizada' : inv.status === 'paid' ? 'quitada' : 'em aberto'}
+                  </Pill>
                 </div>
-                <Money value={invoiceBalance(inv)} className="text-sm" />
+                <Money value={invoiceBalance(inv)} className="text-sm shrink-0" />
               </li>
             ))}
           </ul>
@@ -137,9 +176,9 @@ export default function Invoice() {
 
 function Mini({ label, value }) {
   return (
-    <div>
-      <p className="text-[11px] uppercase tracking-wider text-paper2/60">{label}</p>
-      <Money value={value} className="text-paper2 text-base" />
+    <div className="rounded-xl px-3.5 py-2.5 bg-white/20 backdrop-blur-sm border border-white/25">
+      <p className="text-[10px] uppercase tracking-[0.12em] text-onbrand/70">{label}</p>
+      <Money value={value} colored={false} className="text-onbrand text-base mt-0.5 block" />
     </div>
   )
 }

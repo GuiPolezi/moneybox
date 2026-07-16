@@ -1,151 +1,202 @@
-import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useFinance } from '../context/FinanceContext'
+import { useTheme } from '../context/ThemeContext'
 import { Money } from './ui/primitives'
+import { Aurora } from './Ornament'
+import {
+  IconGrid, IconSwap, IconCard, IconRepeat, IconTarget, IconSliders,
+  IconSun, IconMoon, IconLogout,
+} from './ui/icons'
 
 const nav = [
-  { to: '/', label: 'Painel', end: true },
-  { to: '/movimentacoes', label: 'Movimentações' },
-  { to: '/fatura', label: 'Fatura' },
-  { to: '/contas', label: 'Contas & Parcelas' },
-  { to: '/metas', label: 'Metas' },
-  { to: '/ajustes', label: 'Ajustes' },
+  { to: '/',              label: 'Painel',        short: 'Painel',  Icon: IconGrid,    end: true },
+  { to: '/movimentacoes', label: 'Movimentações', short: 'Lançar',  Icon: IconSwap },
+  { to: '/fatura',        label: 'Fatura',        short: 'Fatura',  Icon: IconCard },
+  { to: '/contas',        label: 'Contas & Parcelas', short: 'Contas', Icon: IconRepeat },
+  { to: '/metas',         label: 'Metas',         short: 'Metas',   Icon: IconTarget },
+  { to: '/ajustes',       label: 'Ajustes',       short: 'Ajustes', Icon: IconSliders },
 ]
 
-function NavItems({ onNavigate }) {
-  return nav.map((n) => (
-    <NavLink
-      key={n.to}
-      to={n.to}
-      end={n.end}
-      onClick={onNavigate}
-      className={({ isActive }) =>
-        `px-3 py-2 rounded-sm text-sm transition-colors ${
-          isActive
-            ? 'bg-currency text-paper2'
-            : 'text-ink/70 hover:bg-paper2 hover:text-ink'
-        }`
-      }
+/* ── Alternador de tema ────────────────────────────────────────────────── */
+function ThemeToggle({ className = '' }) {
+  const { theme, toggle } = useTheme()
+  const dark = theme === 'dark'
+  return (
+    <button
+      onClick={toggle}
+      aria-label={dark ? 'Ativar tema claro' : 'Ativar tema escuro'}
+      title={dark ? 'Tema claro' : 'Tema escuro'}
+      className={`relative w-9 h-9 rounded-xl grid place-items-center text-muted
+                  hover:text-brand hover:bg-brand/10 transition-colors ${className}`}
     >
-      {n.label}
-    </NavLink>
-  ))
+      <span className={`absolute transition-all duration-300 ${dark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`}>
+        <IconSun size={18} />
+      </span>
+      <span className={`absolute transition-all duration-300 ${dark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`}>
+        <IconMoon size={18} />
+      </span>
+    </button>
+  )
+}
+
+/* ── Marca ─────────────────────────────────────────────────────────────── */
+function Brand({ compact = false }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-brand2 to-brand
+                      grid place-items-center shadow-glow shrink-0">
+        <span className="font-display font-bold text-onbrand text-sm">M</span>
+        <span className="absolute inset-0 rounded-xl bg-gradient-to-b from-white/50 to-transparent opacity-60" />
+      </div>
+      {!compact && (
+        <div className="leading-none">
+          <span className="font-display text-lg font-semibold tracking-tight text-fg">MoneyBox</span>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-subtle mt-1">finanças pessoais</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Cartão de saldo (barra lateral) ───────────────────────────────────── */
+function BalanceCard({ value }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl p-4
+                    bg-gradient-to-br from-brand2 to-brand shadow-glow">
+      <div className="absolute inset-0 bg-gradient-to-b from-white/35 to-transparent" />
+      <div className="absolute -right-6 -top-8 w-24 h-24 rounded-full bg-white/20 blur-xl" />
+      <div className="relative">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-onbrand/70">Saldo atual</p>
+        <Money value={value} colored={false} className="block text-2xl mt-1 text-onbrand" />
+      </div>
+    </div>
+  )
 }
 
 export default function Layout() {
   const { signOut, user } = useAuth()
   const { profile } = useFinance()
   const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
 
-  // trava a rolagem do fundo enquanto o menu está aberto
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [menuOpen])
+  const onSignOut = async () => { await signOut(); navigate('/entrar') }
 
-  const onSignOut = async () => { setMenuOpen(false); await signOut(); navigate('/entrar') }
+  const linkClass = ({ isActive }) =>
+    `group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+     transition-all duration-200 ${
+       isActive
+         ? 'bg-brand/12 text-brand'
+         : 'text-muted hover:text-fg hover:bg-fg/[.04]'
+     }`
 
   return (
     <div className="min-h-screen">
-      {/* ── TOP BAR (mobile only) ─────────────────────────────── */}
-      <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 py-3 border-b border-line bg-paper2/90 backdrop-blur">
-        <span className="font-display text-xl text-currency tracking-tight">MoneyBox</span>
-        <div className="flex items-center gap-4">
-          <div className="text-right leading-none">
-            <p className="text-[10px] uppercase tracking-wider text-ink/50">Saldo</p>
+      <Aurora />
+
+      {/* ── BARRA SUPERIOR (celular) ───────────────────────────────────── */}
+      <header className="lg:hidden sticky top-0 z-40 glass rounded-none border-x-0 border-t-0
+                         px-4 py-3 flex items-center justify-between gap-3">
+        <Brand compact />
+        <div className="flex items-center gap-2">
+          <div className="text-right leading-none mr-1">
+            <p className="text-[9px] uppercase tracking-[0.15em] text-subtle">Saldo</p>
             <Money value={profile?.balance} className="text-sm" />
           </div>
+          <ThemeToggle />
           <button
-            onClick={() => setMenuOpen(true)}
-            aria-label="Abrir menu"
-            className="p-1.5 -mr-1.5 text-ink hover:text-currency"
+            onClick={onSignOut}
+            aria-label="Sair"
+            className="w-9 h-9 rounded-xl grid place-items-center text-muted
+                       hover:text-neg hover:bg-neg/10 transition-colors"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
+            <IconLogout size={18} />
           </button>
         </div>
       </header>
 
-      {/* ── DRAWER (mobile only) ──────────────────────────────── */}
-      <div className={`lg:hidden fixed inset-0 z-50 ${menuOpen ? '' : 'pointer-events-none'}`}>
-        {/* backdrop */}
-        <div
-          className={`absolute inset-0 bg-ink/40 transition-opacity duration-200 ${menuOpen ? 'opacity-100' : 'opacity-0'}`}
-          onClick={() => setMenuOpen(false)}
-        />
-        {/* panel */}
-        <aside
-          className={`absolute right-0 top-0 h-full w-72 max-w-[85%] bg-paper border-l border-line shadow-note flex flex-col p-5 transition-transform duration-200 ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="font-display text-2xl text-currency tracking-tight">MoneyBox</span>
-            <button
-              onClick={() => setMenuOpen(false)}
-              aria-label="Fechar menu"
-              className="p-1 text-ink/60 hover:text-ink text-2xl leading-none"
-            >
-              ×
-            </button>
+      {/* ── TRILHO LATERAL (desktop) ───────────────────────────────────── */}
+      <aside className="hidden lg:flex fixed top-0 left-0 z-40 w-[272px] h-screen p-4">
+        <div className="glass rounded-3xl flex flex-col w-full p-5">
+          <Brand />
+
+          <div className="mt-6">
+            <BalanceCard value={profile?.balance} />
           </div>
 
-          <div className="mb-5">
-            <p className="text-[11px] uppercase tracking-wider text-ink/50">Saldo atual</p>
-            <Money value={profile?.balance} className="text-2xl block mt-0.5" />
-          </div>
-
-          <nav className="flex flex-col gap-1">
-            <NavItems onNavigate={() => setMenuOpen(false)} />
+          <nav className="flex flex-col gap-1 mt-6">
+            {nav.map(({ to, label, Icon, end }) => (
+              <NavLink key={to} to={to} end={end} className={linkClass}>
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full
+                                  bg-gradient-to-b from-brand2 to-accent transition-all duration-300
+                                  ${isActive ? 'h-6 opacity-100' : 'h-0 opacity-0'}`}
+                    />
+                    <Icon size={18} />
+                    {label}
+                  </>
+                )}
+              </NavLink>
+            ))}
           </nav>
 
           <div className="mt-auto pt-6">
-            <div className="rule pb-3 mb-3" />
-            <p className="text-xs text-ink/60 truncate">{user?.email}</p>
-            <button onClick={onSignOut} className="mt-2 text-xs text-oxblood hover:underline">
-              Sair
-            </button>
-          </div>
-        </aside>
-      </div>
-
-      {/* ── SIDEBAR (desktop only, fixa) ──────────────────────── */}
-      <aside className="hidden lg:flex lg:fixed top-0 left-0 z-30 lg:w-64 lg:h-screen border-r border-line bg-paper2/90 backdrop-blur lg:flex-col overflow-y-auto">
-        <div className="p-6 flex-1 flex flex-col w-full">
-          <span className="font-display text-2xl text-currency tracking-tight">MoneyBox</span>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-ink/50 mt-1 mb-4">
-            livro-caixa pessoal
-          </p>
-
-          {/* saldo em destaque, sempre à vista com a barra fixa */}
-          <div className="mb-5">
-            <p className="text-[11px] uppercase tracking-wider text-ink/50">Saldo atual</p>
-            <Money value={profile?.balance} className="text-2xl block mt-0.5" />
-          </div>
-
-          <nav className="flex flex-col gap-1">
-            <NavItems />
-          </nav>
-
-          <div className="mt-auto pt-6">
-            <div className="rule pb-3 mb-3" />
-            <p className="text-xs text-ink/60 truncate">{user?.email}</p>
-            <button onClick={onSignOut} className="mt-2 text-xs text-oxblood hover:underline">
-              Sair
-            </button>
+            <div className="rule mb-3" />
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted truncate" title={user?.email}>{user?.email}</p>
+              </div>
+              <ThemeToggle />
+              <button
+                onClick={onSignOut}
+                aria-label="Sair"
+                title="Sair"
+                className="w-9 h-9 rounded-xl grid place-items-center text-muted
+                           hover:text-neg hover:bg-neg/10 transition-colors"
+              >
+                <IconLogout size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* ── CONTENT ───────────────────────────────────────────── */}
-      <main className="lg:pl-64">
-        <div className="p-4 sm:p-6 lg:p-10 max-w-6xl w-full mx-auto">
+      {/* ── CONTEÚDO ───────────────────────────────────────────────────── */}
+      <main className="lg:pl-[272px]">
+        <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-10 max-w-6xl w-full mx-auto pb-28 lg:pb-10">
           <Outlet />
         </div>
       </main>
+
+      {/* ── NAVEGAÇÃO INFERIOR (celular) ───────────────────────────────── */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 glass rounded-none
+                      border-x-0 border-b-0 px-2 pt-1.5 pb-safe">
+        <div className="flex items-stretch justify-around">
+          {nav.map(({ to, short, Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `relative flex flex-col items-center gap-1 px-2 py-1.5 rounded-xl min-w-0 flex-1
+                 transition-colors ${isActive ? 'text-brand' : 'text-subtle'}`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={`absolute -top-1.5 h-1 rounded-full bg-gradient-to-r from-brand2 to-accent
+                                transition-all duration-300 ${isActive ? 'w-8 opacity-100' : 'w-0 opacity-0'}`}
+                  />
+                  <Icon size={20} />
+                  <span className="text-[10px] font-medium truncate w-full text-center">{short}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
     </div>
   )
 }

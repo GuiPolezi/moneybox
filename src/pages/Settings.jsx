@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useFinance } from '../context/FinanceContext'
-import { Button, Card, Field, Input, Money } from '../components/ui/primitives'
+import { useTheme } from '../context/ThemeContext'
+import { Button, Card, Field, Input, PageHead } from '../components/ui/primitives'
+import { IconSun, IconMoon, IconSparkle } from '../components/ui/icons'
 import { sanitizeAmountInput, parseAmount } from '../lib/finance'
 
 export default function Settings() {
   const { profile, updateProfile } = useFinance()
+  const { theme, toggle } = useTheme()
   const [form, setForm] = useState({ display_name: '', salary: '', salary_day: '', balance: '' })
   const [saved, setSaved] = useState(false)
 
@@ -29,44 +32,98 @@ export default function Settings() {
     setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
 
-  return (
-    <div className="space-y-8 max-w-xl">
-      <header>
-        <p className="text-xs uppercase tracking-[0.25em] text-ink/50">Ajustes</p>
-        <h1 className="font-display text-3xl text-ink">Seus números</h1>
-      </header>
+  const dark = theme === 'dark'
 
-      <Card className="p-6 space-y-5">
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <PageHead eyebrow="Ajustes" title="Seus números" />
+
+      {/* ── Aparência ─────────────────────────────────────────────────── */}
+      <Card className="p-5 sm:p-6" hover>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-display text-lg font-semibold text-fg tracking-tight">Aparência</h3>
+            <p className="text-sm text-muted mt-1">
+              {dark ? 'Tema escuro — meia-noite aqua.' : 'Tema claro — céu e vidro.'}
+            </p>
+          </div>
+          <button
+            onClick={toggle}
+            role="switch"
+            aria-checked={dark}
+            aria-label="Alternar tema escuro"
+            className={`relative w-16 h-9 rounded-full shrink-0 transition-colors duration-300 border
+                        ${dark ? 'bg-brand/25 border-brand/40' : 'bg-fg/[.06] border-line2'}`}
+          >
+            <span
+              className={`absolute top-1 w-7 h-7 rounded-full grid place-items-center
+                          bg-gradient-to-br from-brand2 to-brand text-onbrand shadow-glow
+                          transition-transform duration-300 ease-out
+                          ${dark ? 'translate-x-8' : 'translate-x-1'}`}
+            >
+              {dark ? <IconMoon size={14} /> : <IconSun size={14} />}
+            </span>
+          </button>
+        </div>
+      </Card>
+
+      {/* ── Perfil e números ──────────────────────────────────────────── */}
+      <Card className="p-5 sm:p-6 space-y-5" hover>
+        <h3 className="font-display text-lg font-semibold text-fg tracking-tight">Perfil e números</h3>
+
         <Field label="Nome">
           <Input value={form.display_name} onChange={set('display_name')} />
         </Field>
 
         <Field label="Salário (fixo)" hint="Valor que você recebe todo mês. Muda só quando troca de emprego.">
-          <Input type="text" inputMode="decimal" value={form.salary} onChange={(e) => setForm({ ...form, salary: sanitizeAmountInput(e.target.value) })} className="figure" />
+          <Input type="text" inputMode="decimal" value={form.salary}
+            onChange={(e) => setForm({ ...form, salary: sanitizeAmountInput(e.target.value) })}
+            className="figure text-lg" />
         </Field>
 
         <Field label="Dia do pagamento" hint="Quinto dia útil ≈ dia 5. A fatura vence neste dia.">
-          <Input type="number" min="1" max="31" value={form.salary_day} onChange={set('salary_day')} className="figure" />
+          <Input type="number" min="1" max="31" value={form.salary_day}
+            onChange={set('salary_day')} className="figure" />
         </Field>
 
         <Field label="Saldo atual" hint="Quanto você tem disponível agora. As movimentações partem daqui.">
-          <Input type="text" inputMode="decimal" value={form.balance} onChange={(e) => setForm({ ...form, balance: sanitizeAmountInput(e.target.value) })} className="figure" />
+          <Input type="text" inputMode="decimal" value={form.balance}
+            onChange={(e) => setForm({ ...form, balance: sanitizeAmountInput(e.target.value) })}
+            className="figure text-lg" />
         </Field>
 
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center gap-3 pt-1">
           <Button onClick={save}>Salvar</Button>
-          {saved && <span className="text-sm text-currency">Salvo ✓</span>}
+          <span
+            className={`text-sm text-pos font-medium transition-all duration-300
+                        ${saved ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}
+          >
+            ✓ Salvo
+          </span>
         </div>
       </Card>
 
-      <Card className="p-6">
-        <h3 className="font-display text-lg text-ink mb-2">Como o saldo se move</h3>
-        <ul className="text-sm text-ink/65 space-y-1.5 list-disc pl-5">
-          <li>O <strong>salário</strong> é seu saldo de partida — definido aqui, fixo.</li>
-          <li>Uma <strong>receita</strong> aumenta o saldo; uma <strong>despesa em dinheiro</strong> diminui.</li>
-          <li>Gasto <strong>no crédito</strong> entra na fatura do mês — o saldo só cai quando a fatura é paga.</li>
-          <li>Pagar conta fixa ou parcela <strong>diminui o saldo</strong>. Sem saldo, o que faltar vai para a fatura.</li>
-          <li>A <strong>projeção</strong> usa: saldo + salário − fatura em aberto − contas do mês.</li>
+      {/* ── Como o saldo se move ──────────────────────────────────────── */}
+      <Card className="p-5 sm:p-6" hover>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-7 h-7 rounded-lg bg-brand/10 text-brand grid place-items-center">
+            <IconSparkle size={14} />
+          </span>
+          <h3 className="font-display text-lg font-semibold text-fg tracking-tight">Como o saldo se move</h3>
+        </div>
+        <ul className="space-y-2.5">
+          {[
+            <>O <strong className="text-fg font-medium">salário</strong> é seu saldo de partida — definido aqui, fixo.</>,
+            <>Uma <strong className="text-fg font-medium">receita</strong> aumenta o saldo; uma <strong className="text-fg font-medium">despesa em dinheiro</strong> diminui.</>,
+            <>Gasto <strong className="text-fg font-medium">no crédito</strong> entra na fatura do mês — o saldo só cai quando a fatura é paga.</>,
+            <>Pagar conta fixa ou parcela <strong className="text-fg font-medium">diminui o saldo</strong>. Sem saldo, o que faltar vai para a fatura.</>,
+            <>A <strong className="text-fg font-medium">projeção</strong> usa: saldo + salário − fatura em aberto − contas do mês.</>,
+          ].map((item, i) => (
+            <li key={i} className="flex gap-3 text-sm text-muted leading-relaxed">
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-brand2 to-accent shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
         </ul>
       </Card>
     </div>
